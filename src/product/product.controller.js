@@ -10,6 +10,7 @@ const {
   getProductById,
   createProductData,
   deleteProductById,
+  editProductById,
 } = require("./product.service");
 
 router.get("/", async (req, res) => {
@@ -21,6 +22,11 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const productId = req.params.id;
+    
+    if (typeof productId != "string") {
+      throw Error("Id is not a string");
+    }
+
     const product = await getProductById(productId);
 
     res.send(product);
@@ -31,6 +37,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
+
     const newProductData = req.body;
 
     const product = await createProductData(newProductData);
@@ -57,58 +64,46 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const productId = req.params.id;
-  const dataProduct = req.body;
+  try {
+    const productId = req.params.id;
+    const dataProduct = req.body;
 
-  if (
-    !(
-      dataProduct.name &&
-      dataProduct.price &&
-      dataProduct.description &&
-      dataProduct.image
-    )
-  ) {
-    return res.status(400).json("Some Field Empty");
+    if (
+      !(
+        dataProduct.name &&
+        dataProduct.price &&
+        dataProduct.description &&
+        dataProduct.image
+      )
+    ) {
+      return res.status(400).json("Some Field Empty");
+    }
+
+    const product = await editProductById(productId, dataProduct);
+
+    res.send({
+      data: product,
+      message: "Update produk sukses",
+    });
+  } catch (error) {
+    res.status(400).send(error.message);
   }
-
-  const product = await prisma.products.update({
-    where: {
-      id: productId,
-    },
-    data: {
-      name: dataProduct.name,
-      price: dataProduct.price,
-      description: dataProduct.description,
-      image: dataProduct.image,
-    },
-  });
-
-  res.send({
-    data: product,
-    message: "update produk sukses",
-  });
 });
 
 router.patch("/:id", async (req, res) => {
-  const productId = req.params.id;
-  const dataProduct = req.body;
+  try {
+    const productId = req.params.id;
+    const dataProduct = req.body;
 
-  const product = await prisma.products.update({
-    where: {
-      id: productId,
-    },
-    data: {
-      name: dataProduct.name,
-      price: dataProduct.price,
-      description: dataProduct.description,
-      image: dataProduct.image,
-    },
-  });
+    const product = await editProductById(productId, dataProduct);
 
-  res.send({
-    data: product,
-    message: "update produk sukses",
-  });
+    res.send({
+      data: product,
+      message: "Patch produk sukses",
+    });
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
 });
 
 module.exports = router;
